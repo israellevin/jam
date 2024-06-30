@@ -1,29 +1,7 @@
 #!/usr/bin/bash
-
-if [ "$1" != "--slirped" ]; then
-    touch /tmp/marmalade.netns
-    (sleep 0.1; slirp4netns --configure --mtu=65520 --netns-type=path /tmp/marmalade.netns slirp) &
-    slirp_pid=$!
-    unshare --net=/tmp/marmalade.netns --user --mount --map-root-user -- "$0" --slirped "$@"
-    kill $slirp_pid
-    umount /tmp/marmalade.netns
-    exit 0
-fi
-shift
-
-sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
-ip tuntap add tap0 mode tap
-ip link set tap0 up
-ip addr add 172.16.0.1/24 dev tap0
-iptables -F
-iptables -t nat -A POSTROUTING -o slirp -j MASQUERADE
-iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i tap0 -o slirp -j ACCEPT
-
 cd "$(dirname "${BASH_SOURCE[0]}")"
-
 rm /tmp/firecracker.socket
-./firecracker --api-sock /tmp/firecracker.socket --config-file <(cat <<EOF
+marmalade-generator-run wlan0 tap0 172.16.0.1/24 ./firecracker /tmp/firecracker.socket <(cat <<EOF
 {
   "boot-source": {
     "kernel_image_path": "./vmlinux",

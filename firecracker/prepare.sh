@@ -65,7 +65,6 @@ exec > /generator/setup.log 2>&1
 ip addr add 172.16.0.2/24 dev eth0
 ip link set eth0 up
 ip route add default via 172.16.0.1 dev eth0
-echo ok | nc -lp1234
 echo ok | nc -lp2468 | tar -xzC /generator
 for file in /generator/*; do
     if [ -x "$file" ]; then

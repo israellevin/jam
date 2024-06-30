@@ -130,7 +130,11 @@ For all these options we can use redis pub-sub to deliver the musical notation f
 
 ### Generator Tech Details
 
-Our current setup creates a base image (based on the minimal Alpine linux docker image) that firecracker can run, with a local init script that expects a tgz file on port `2468`. Once a tgz file is received, the init script extracts it to a tmpfs and runs the first executable file in the directory. The generator runs as root on the virtual machine, and the only external access it has is to the redis port on the host machine, which it uses to read the state of the jam, write tags, and produce audio. TODO: currently we have full network access, for development purposes, but it's just a matter of in `iptable` command.
+Our current setup creates a base image (based on the minimal Alpine linux docker image) that firecracker can run, with a local init script that expects a tgz file on port `2468`. Once a tgz file is received, the init script extracts it to a tmpfs and runs the first executable file in the directory. The generator runs as root on the virtual machine, and the only external access it has is to the redis port on the host machine, which it uses to read the state of the jam, write tags, and produce audio.
+
+Since connecting the Firecracker microVM to the network requires creating a tap device, which requires root access, we have a setuid wrapper C program that runs a script that creates the tap device and runs the Firecracker binary. The setuid wrapper is built with a Makefile in the `firecracker` directory.
+
+TODO: currently we have full network access, for development purposes, but it's just a matter of in `iptable` command.
 
 The only fly in the ointment is that to connect those damn microVMs to the network requires creating a tap device, which requires root access. One way around it is running Marmalade as root, which is probably more secure than running your average web server as root, but that's not saying much. We could use `setcap` to allow any user to create the tap device, which will let any user create a tap device. Our current solution is to use a setuid wrapper C prograp that runs a script, and there is a Makefile for it and stuff. It's a work in progress.
 
@@ -157,7 +161,7 @@ The generator lifecycle is as follows:
   5. Run `(ql:add-to-init-file)`
   6. Create a symbolic link to this repository in the `local-projects` directory of the quicklisp home directory with `ln -s <full path to repository> <full path to quicklisp home>/local-projects/marmalade`
 - [Firecracker](https://firecracker-microvm.github.io/) setup
-  1. Start by running the `firecracker/prepare.sh` script (which requires `bash`, `curl`, `jq`, and some basic GNU utilities) - you should end up with the Firecracker binary, a kernel image and a root filesystem image which can receive and run a generator in a standard, secure and isolated environment
+  1. Run the `firecracker/prepare.sh` script (which requires `bash`, `curl`, `jq`, and some basic GNU utilities) - you should end up with the Firecracker binary, a kernel image and a root filesystem image which can receive and run a generator in a standard, secure and isolated environment
   2. Make and install the setuid wrapper for the tap device with a `make` command in the `firecracker` directory
 
 ## Running Marmalade

@@ -1,8 +1,7 @@
 # Define variables
 CC = gcc
 CFLAGS = -o
-TARGET = marmalade_tap
-SCRIPT = marmalade_tap.sh
+TARGET = marmalade-generator-run
 BIN_DIR = /usr/local/bin
 
 all: build install
@@ -15,12 +14,8 @@ clean:
 
 install: build
 	sudo cp $(TARGET) $(BIN_DIR)
-	sudo cp $(SCRIPT) $(BIN_DIR)
 	sudo chown root:root $(BIN_DIR)/$(TARGET)
 	sudo chmod 4755 $(BIN_DIR)/$(TARGET)
-	sudo chown root:root $(BIN_DIR)/$(SCRIPT)
-	sudo chmod 755 $(BIN_DIR)/$(SCRIPT)
 
 uninstall:
 	sudo rm -f $(BIN_DIR)/$(TARGET)
-	sudo rm -f $(BIN_DIR)/$(SCRIPT)
